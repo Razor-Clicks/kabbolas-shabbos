@@ -1,12 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("CRITICAL: DATABASE_URL environment string is missing!");
-}
+const prismaClientSingleton = () => {
+  return new PrismaClient();
+};
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+declare const globalThis: {
+  prisma: ReturnType<typeof prismaClientSingleton> | undefined;
+} & typeof globalThis;
 
-// Uses standard Prisma engine configuration
-export const prisma = globalForPrisma.prisma || new PrismaClient(); 
+export const prisma = globalThis.prisma ?? prismaClientSingleton();
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV !== 'production') globalThis.prisma = prisma;

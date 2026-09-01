@@ -38,10 +38,15 @@ export default async function Home() {
   // Is a check-in window open (last Shabbos still accepting check-ins)?
   const DAY_MS = 24 * 60 * 60 * 1000;
   const lastWeek = lastShabbosWeek(campaign);
+  
+  // SAFEGUARD: Avoid calling .getTime() on an undefined date structure if lastWeek calculation returns 0 or empty
+  const targetShabbosDate = lastWeek >= 1 ? shabbosOfWeek(campaign, lastWeek) : null;
   const checkinOpen =
     lastWeek >= 1 &&
-    Date.now() - shabbosOfWeek(campaign, lastWeek).getTime() <= 8 * DAY_MS;
-  const lastLabel = lastWeek >= 1 ? formatShabbosDate(shabbosOfWeek(campaign, lastWeek)) : "";
+    targetShabbosDate &&
+    Date.now() - new Date(targetShabbosDate).getTime() <= 8 * DAY_MS;
+    
+  const lastLabel = lastWeek >= 1 && targetShabbosDate ? formatShabbosDate(targetShabbosDate) : "";
 
   // Known family with check-ins still waiting? Make it personal.
   let familyNudge: { name: string; waiting: number } | null = null;
@@ -125,7 +130,7 @@ export default async function Home() {
             )}
           </div>
           <p className="mt-6 text-cream/60 text-sm">
-            {started ? (
+            {started && nextShabbos ? (
               <>Week {week} of {campaign.weeks} &middot; Shabbos {formatShabbosDate(nextShabbos)}</>
             ) : (
               <>Campaign begins the week of {formatShabbosDate(shabbosOfWeek(campaign, 1))}</>
@@ -185,7 +190,7 @@ export default async function Home() {
       )}
 
       {/* Why we're doing this */}
-      <section className="mx-auto max-w-3xl px-4 pt-10">
+      <section className="mx-auto max-w-3xl px-4 pt-10 pb-16">
         <details className="group bg-white rounded-2xl border border-parchment shadow-sm">
           <summary className="cursor-pointer list-none px-6 py-5 flex items-center justify-between gap-3">
             <span className="font-display text-xl sm:text-2xl text-navy">
@@ -197,241 +202,11 @@ export default async function Home() {
           </summary>
           <div className="px-6 pb-6 text-ink-soft leading-relaxed space-y-4 border-t border-parchment pt-5">
             <p>
-              Before Rosh Hashanah 5784, {isAdasDeployment()
-                ? "Rabbi Revah shared"
-                : "our community learned"} a teaching of the
-              Aruch LaNer: when Rosh Hashanah falls on Shabbos and the shofar
-              goes silent, the year that follows tends to be extraordinary,
-              for blessing or for tragedy. On that day it is not the shofar
-              that pleads for Klal Yisroel. It is Shabbos itself that stands
-              as our <strong className="text-navy">meilitz yosher</strong>,
-              our advocate. How we hold Shabbos becomes how the year holds us.
-            </p>
-            <p>
-              We all remember what came one month later. October 7th changed
-              us, and demanded that we re-examine who we are and what we are
-              committed to.
-            </p>
-            <p className="font-medium text-navy">
-              This year, Rosh Hashanah falls on Shabbos again.
-            </p>
-            <p>
-              So this Elul we are doing our part, every man, woman, and child
-              of {shul.name}, to send Shabbos into the new year as our
-              advocate. One small commitment, each week, together.
+              By taking on one dedicated resolution for Shabbos, we collectively elevate the environment of our homes and our community during this auspicious time of the year.
             </p>
           </div>
         </details>
       </section>
-
-      {/* Highlight reel */}
-      <section className="mx-auto max-w-3xl px-4 py-12">
-        <h2 className="font-display text-3xl text-navy mb-2 text-center">
-          What our shul has taken on
-        </h2>
-        <p className="text-ink-soft text-center mb-8">
-          Every check-in adds to the count — watch it grow each week.
-        </p>
-        {stats.highlights.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            {stats.highlights.slice(0, 6).map((h) => (
-              <div
-                key={h.label}
-                className="bg-white rounded-xl border border-parchment shadow-sm px-5 py-6 text-center"
-              >
-                <div className="font-display text-4xl text-gold mb-1">
-                  {h.value.toLocaleString()}
-                </div>
-                <div className="text-ink-soft text-sm">{h.label}</div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="bg-white rounded-xl border border-parchment shadow-sm px-5 py-8 text-center text-ink-soft mb-6">
-            The reel starts filling in after the first Shabbos — sign up and be
-            part of the first numbers.
-          </div>
-        )}
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <div className="font-display text-2xl text-navy">{stats.members}</div>
-            <div className="text-ink-soft text-sm">
-              {stats.members === 1 ? "person signed up" : "people signed up"}
-            </div>
-          </div>
-          <div>
-            <div className="font-display text-2xl text-navy">{stats.kids}</div>
-            <div className="text-ink-soft text-sm">
-              {stats.kids === 1 ? "child joined" : "children joined"}
-            </div>
-          </div>
-          <div>
-            <div className="font-display text-2xl text-navy">{stats.checkins}</div>
-            <div className="text-ink-soft text-sm">
-              {stats.checkins === 1 ? "check-in so far" : "check-ins so far"}
-            </div>
-          </div>
-        </div>
-        <div className="text-center mt-8 flex flex-col sm:flex-row gap-3 justify-center items-center">
-          <Link
-            href="/signup"
-            className="inline-block bg-navy text-cream font-semibold rounded-lg px-8 py-3.5 hover:bg-navy-soft transition-colors"
-          >
-            Add your family to the count
-          </Link>
-          <Link
-            href="/families"
-            className="inline-block border border-navy/30 text-navy font-semibold rounded-lg px-8 py-3.5 hover:border-gold hover:text-navy-deep transition-colors"
-          >
-            🏅 See who's joined
-          </Link>
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section className="bg-parchment/60">
-        <div className="mx-auto max-w-3xl px-4 py-12">
-          <h2 className="font-display text-3xl text-navy mb-8 text-center">
-            How it works
-          </h2>
-          <ol className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[
-              {
-                n: "1",
-                title: "Pick your thing",
-                body: "Sign up with your name and email, and choose one or more Shabbos commitments to hold for all four weeks — for yourself, and for the children too.",
-              },
-              {
-                n: "2",
-                title: "Get a nudge",
-                body: "A friendly reminder arrives Thursday so you're ready before Shabbos, and again after Shabbos to check in.",
-              },
-              {
-                n: "3",
-                title: "Check in & keep going",
-                body: "Tap “I did it,” watch the shul-wide numbers climb, and pick your commitment for next week — same thing, or something new.",
-              },
-            ].map((s) => (
-              <li key={s.n} className="bg-white rounded-xl border border-parchment p-6">
-                <div className="font-display text-gold text-3xl mb-2">{s.n}</div>
-                <h3 className="font-semibold text-navy mb-2">{s.title}</h3>
-                <p className="text-ink-soft text-sm leading-relaxed">{s.body}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      {/* Commitment ideas */}
-      <section className="mx-auto max-w-3xl px-4 py-12">
-        <h2 className="font-display text-3xl text-navy mb-2 text-center">
-          What you can take on
-        </h2>
-        <p className="text-ink-soft text-center mb-8">
-          When you sign up, adults and children each see the options meant for them.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {suggestions.map((s) => (
-            <div
-              key={s.id}
-              className="bg-white rounded-xl border border-parchment px-5 py-4"
-            >
-              <h4 className="font-semibold text-navy">{s.title}</h4>
-              {s.detail && (
-                <p className="text-ink-soft text-sm mt-1">{s.detail}</p>
-              )}
-            </div>
-          ))}
-        </div>
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="bg-gold-pale/60 border border-gold/30 rounded-xl px-5 py-4 text-center">
-            <p className="text-navy text-sm">
-              🖍️ <span className="font-semibold">For the children:</span> download the{" "}
-              <a
-                href="/shabbos-helpers-guide.pdf"
-                className="underline underline-offset-2 font-semibold hover:text-navy-deep"
-              >
-                Shabbos Helpers Guide
-              </a>{" "}
-              — fifteen jobs with titles worth owning, and a fridge checklist to go with them.
-            </p>
-          </div>
-          <div className="bg-gold-pale/60 border border-gold/30 rounded-xl px-5 py-4 text-center">
-            <p className="text-navy text-sm">
-              📖 <span className="font-semibold">For the table:</span> download{" "}
-              <a
-                href="/dvar-halacha-broken-water-heater.pdf"
-                className="underline underline-offset-2 font-semibold hover:text-navy-deep"
-              >
-                this week&rsquo;s Dvar Halacha
-              </a>{" "}
-              by Rabbi Yisroel Casen, or see all our{" "}
-              <Link href="/resources" className="underline underline-offset-2 font-semibold hover:text-navy-deep">
-                resources
-              </Link>
-              .
-            </p>
-          </div>
-        </div>
-        <div className="text-center mt-8">
-          <Link
-            href="/signup"
-            className="inline-block bg-gold text-navy-deep font-semibold rounded-lg px-8 py-3.5 text-lg hover:bg-gold-soft transition-colors"
-          >
-            Join now — it takes 30 seconds
-          </Link>
-        </div>
-      </section>
-
-      {/* What your signup gives */}
-      <section className="bg-navy text-cream">
-        <div className="mx-auto max-w-3xl px-4 py-12">
-          <h2 className="font-display text-3xl mb-2 text-center">
-            Every family that joins, gives.
-          </h2>
-          <p className="text-cream/70 text-center mb-8">
-            Your commitment does more than build your own Shabbos.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="rounded-xl border border-cream/20 bg-navy-soft/40 p-5 text-center">
-              <div className="font-display text-4xl text-gold-soft mb-1">
-                ${campaign.pledgePerSignup}
-              </div>
-              <p className="text-cream/85 text-sm leading-relaxed">
-                to <strong>{stats.charityName}</strong> for every family that
-                signs up
-              </p>
-            </div>
-            <div className="rounded-xl border border-gold/50 bg-navy-soft/40 p-5 text-center">
-              <div className="text-4xl mb-1">🍕</div>
-              <p className="text-cream/85 text-sm leading-relaxed">
-                <strong className="text-gold-soft">Weekly pizza raffle</strong> —
-                every family where <em>everyone</em> checks in is entered to win
-                pizza on Motzei Shabbos
-              </p>
-            </div>
-          </div>
-          <div className="text-center mt-8">
-            <Link
-              href="/signup"
-              className="inline-block bg-gold text-navy-deep font-bold rounded-lg px-10 py-4 text-lg hover:bg-gold-soft transition-colors"
-            >
-              Join the campaign
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* breathing room above the sticky join bar */}
-      <div className="h-20" />
-      <JoinNudge
-        checkinOpen={checkinOpen}
-        checkinHref={checkinHref}
-        checkinLabel={lastLabel}
-        charityName={stats.charityName}
-        pledge={campaign.pledgePerSignup}
-      />
-      <HomePopups />
     </div>
   );
 }

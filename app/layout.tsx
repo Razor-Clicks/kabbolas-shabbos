@@ -1,4 +1,6 @@
-import type { Metadata } from "next";
+export default async function Page() {
+  try {
+    import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { LogoOnDark, LinkLogoOnDark } from "@/components/Logo";
@@ -92,4 +94,10 @@ export default async function RootLayout({
       </body>
     </html>
   );
+}
+    } catch (error: any) {
+    // This will force Vercel to print the actual problematic object in the logs
+    console.error("CRASHING OBJECT DETAILS:", error);
+    return <div>Database or Session error: {error.message}</div>;
+  }
 }

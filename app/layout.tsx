@@ -1,5 +1,3 @@
-export default async function Page() {
-  try {
     import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import type { RaffleDraw } from "@prisma/client";
 
 export type EligibleFamily = {
   id: string;
@@ -37,7 +38,7 @@ export async function raffleEligible(week: number): Promise<EligibleFamily[]> {
  * table hasn't been created in the database yet (deploy/raffle.sql), so the
  * public pages never break on a missing table.
  */
-export async function raffleDraws() {
+export async function raffleDraws(): Promise<RaffleDraw[]> {
   try {
     return await prisma.raffleDraw.findMany({ orderBy: { week: "asc" } });
   } catch {

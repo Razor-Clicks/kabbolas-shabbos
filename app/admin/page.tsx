@@ -74,7 +74,7 @@ export default async function AdminPage() {
     orderBy: { createdAt: "desc" },
   });
   const messageCounts = await prisma.messageLog.groupBy({
-    by: ["kind", "week"],
+    by: ["kind", "week"] as const,
     _count: { _all: true },
     orderBy: [{ week: "asc" }],
   });

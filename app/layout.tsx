@@ -93,9 +93,5 @@ export default async function RootLayout({
     </html>
   );
 }
-    } catch (error: any) {
-    // This will force Vercel to print the actual problematic object in the logs
-    console.error("CRASHING OBJECT DETAILS:", error);
-    return <div>Database or Session error: {error.message}</div>;
-  }
+
 }

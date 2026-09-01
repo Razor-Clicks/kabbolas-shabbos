@@ -81,8 +81,6 @@ export default async function AdminPage() {
   const stats = await getCampaignStats(week);
     const suggestions: SuggestionRow[] = await fetchSuggestions();
   const households: HouseholdRow[] = await fetchHouseholds();
-    orderBy: { createdAt: "desc" },
-  });
     const messageCounts: { kind: string; week: number; _count: { _all: number } }[] =
     await prisma.messageLog.groupBy({
       by: ["kind", "week"],

@@ -3,10 +3,6 @@ generator client {
   previewFeatures = ["driverAdapters"]
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
 
 // Postgres (Neon/Supabase/Vercel Postgres). For laptop-only tinkering without
 // a database, flip provider to "sqlite" and set DATABASE_URL="file:./dev.db".

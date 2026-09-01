@@ -73,11 +73,12 @@ export default async function AdminPage() {
     },
     orderBy: { createdAt: "desc" },
   });
-  const messageCounts = await prisma.messageLog.groupBy({
-    by: ["kind", "week"] as const,
-    _count: { _all: true },
-    orderBy: [{ week: "asc" }],
-  });
+    const messageCounts: { kind: string; week: number; _count: { _all: number } }[] =
+    await prisma.messageLog.groupBy({
+      by: ["kind", "week"],
+      _count: { _all: true },
+      orderBy: [{ week: "asc" }],
+    });
 
   const upWeek = Math.min(nextShabbosWeek(campaign), campaign.weeks);
   const doneWeek = lastShabbosWeek(campaign);

@@ -42,7 +42,34 @@ const inputCls =
   "w-full rounded-lg border border-parchment bg-cream px-3 py-2 text-sm outline-none focus:border-gold";
 const btnCls =
   "bg-navy text-cream rounded-lg px-4 py-2 text-sm font-medium hover:bg-navy-soft transition-colors";
-async function fetchHouseholds() {
+type GoalRow = {
+  id: string;
+  week: number;
+  checkedInAt: Date | null;
+  customTitle: string | null;
+  suggestion: { title: string } | null;
+};
+
+type MemberRow = {
+  id: string;
+  name: string;
+  gender: string | null;
+  isChild: boolean;
+  goals: GoalRow[];
+};
+
+type HouseholdRow = {
+  id: string;
+  token: string;
+  familyName: string | null;
+  phone: string | null;
+  email: string | null;
+  email2: string | null;
+  email3: string | null;
+  members: MemberRow[];
+};
+
+async function fetchHouseholds(): Promise<HouseholdRow[]> {
   return prisma.household.findMany({
     include: {
       members: { include: { goals: { include: { suggestion: true } } } },
@@ -50,12 +77,22 @@ async function fetchHouseholds() {
     orderBy: { createdAt: "desc" },
   });
 }
-type HouseholdRow = Awaited<ReturnType<typeof fetchHouseholds>>[number];
 
-async function fetchSuggestions() {
+type SuggestionRow = {
+  id: string;
+  title: string;
+  detail: string | null;
+  unitLabel: string;
+  unitValue: number;
+  categories: string;
+  sortOrder: number;
+  active: boolean;
+};
+
+async function fetchSuggestions(): Promise<SuggestionRow[]> {
   return prisma.suggestion.findMany({ orderBy: { sortOrder: "asc" } });
 }
-type SuggestionRow = Awaited<ReturnType<typeof fetchSuggestions>>[number];
+
 export default async function AdminPage() {
   if (!(await isAdmin())) {
     return (
@@ -79,9 +116,9 @@ export default async function AdminPage() {
   const campaign = await getCampaign();
   const week = activeWeek(campaign);
   const stats = await getCampaignStats(week);
-    const suggestions: SuggestionRow[] = await fetchSuggestions();
-  const households: HouseholdRow[] = await fetchHouseholds();
-    const messageCounts: { kind: string; week: number; _count: { _all: number } }[] =
+  const suggestions = await fetchSuggestions();
+  const households = await fetchHouseholds();
+  const messageCounts: { kind: string; week: number; _count: { _all: number } }[] =
     await prisma.messageLog.groupBy({
       by: ["kind", "week"],
       _count: { _all: true },

@@ -42,7 +42,20 @@ const inputCls =
   "w-full rounded-lg border border-parchment bg-cream px-3 py-2 text-sm outline-none focus:border-gold";
 const btnCls =
   "bg-navy text-cream rounded-lg px-4 py-2 text-sm font-medium hover:bg-navy-soft transition-colors";
+async function fetchHouseholds() {
+  return prisma.household.findMany({
+    include: {
+      members: { include: { goals: { include: { suggestion: true } } } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
+type HouseholdRow = Awaited<ReturnType<typeof fetchHouseholds>>[number];
 
+async function fetchSuggestions() {
+  return prisma.suggestion.findMany({ orderBy: { sortOrder: "asc" } });
+}
+type SuggestionRow = Awaited<ReturnType<typeof fetchSuggestions>>[number];
 export default async function AdminPage() {
   if (!(await isAdmin())) {
     return (
@@ -66,11 +79,8 @@ export default async function AdminPage() {
   const campaign = await getCampaign();
   const week = activeWeek(campaign);
   const stats = await getCampaignStats(week);
-  const suggestions = await prisma.suggestion.findMany({ orderBy: { sortOrder: "asc" } });
-  const households = await prisma.household.findMany({
-    include: {
-      members: { include: { goals: { include: { suggestion: true } } } },
-    },
+    const suggestions: SuggestionRow[] = await fetchSuggestions();
+  const households: HouseholdRow[] = await fetchHouseholds();
     orderBy: { createdAt: "desc" },
   });
     const messageCounts: { kind: string; week: number; _count: { _all: number } }[] =
